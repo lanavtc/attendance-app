@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>點名</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --success: #10b981;
+    --success-bg: #ecfdf5;
+    --danger: #ef4444;
+    --danger-bg: #fef2f2;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-400: #9ca3af;
+    --gray-600: #4b5563;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --radius-lg: 14px;
+    --radius-md: 10px;
+    --radius-sm: 8px;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f5f7;
+    color: var(--gray-900);
+    overscroll-behavior-y: none;
+    padding-bottom: calc(68px + var(--safe-bottom));
+  }
+
+  /* 頂部 Sticky Header */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--gray-200);
+    padding-top: max(10px, var(--safe-top));
+    padding-left: 14px;
+    padding-right: 14px;
+    padding-bottom: 10px;
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .app-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .sync-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .sync-badge.online { background: var(--success-bg); color: var(--success); }
+  .sync-badge.offline { background: var(--danger-bg); color: var(--danger); }
+  .sync-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* 班別 Tabs */
+  .class-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 8px 0;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-200);
+    background: #fff;
+    color: var(--gray-600);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .tab-btn.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  /* 進度條與數據統計 */
+  .stats-card {
+    background: #fff;
+    border-radius: var(--radius-md);
+    padding: 10px;
+    margin-bottom: 8px;
+    border: 1px solid var(--gray-200);
+  }
+
+  .progress-bar-bg {
+    height: 6px;
+    background: var(--gray-200);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--primary);
+    transition: width 0.3s ease;
+  }
+
+  .stats-counts {
+    display: flex;
+    justify-content: space-around;
+    font-size: 12px;
+    color: var(--gray-600);
+  }
+
+  .stats-counts b { font-weight: 700; }
+  .text-success { color: var(--success); }
+  .text-danger { color: var(--danger); }
+  .text-gray { color: var(--gray-800); }
+
+  /* 搜尋與篩選列 */
+  .filter-bar {
+    display: flex;
+    gap: 6px;
+  }
+
+  .search-input {
+    flex: 1;
+    padding: 7px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-200);
+    background: var(--gray-100);
+    font-size: 13px;
+    outline: none;
+  }
+
+  .search-input:focus {
+    background: #fff;
+    border-color: var(--primary);
+  }
+
+  .filter-select {
+    padding: 7px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-200);
+    background: var(--gray-100);
+    font-size: 13px;
+    color: var(--gray-800);
+    outline: none;
+  }
+
+  /* 卡片列表 Container */
+  .list-container {
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* 學生卡片主體 */
+  .student-card-wrapper {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    touch-action: pan-y;
+    background: #fff;
+  }
+
+  /* Swipe 背景 */
+  .swipe-bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+    border-radius: var(--radius-lg);
+    opacity: 0;
+  }
+
+  .swipe-bg.present { background: var(--success); justify-content: flex-start; }
+  .swipe-bg.absent { background: var(--danger); justify-content: flex-end; }
+
+  .student-card {
+    position: relative;
+    z-index: 2;
+    background: #fff;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.2s ease, background 0.2s ease;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+  }
+
+  .student-card-wrapper.dragging .student-card { transition: none; }
+  .student-card-wrapper.is-present .student-card {
+    background: var(--success-bg);
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+  .student-card-wrapper.is-absent .student-card {
+    background: var(--danger-bg);
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+
+  .student-info { display: flex; flex-direction: column; gap: 2px; }
+  .student-zh { font-size: 15px; font-weight: 700; color: var(--gray-900); }
+  .student-en { font-size: 12px; color: var(--gray-600); }
+
+  .action-area { display: flex; align-items: center; gap: 6px; }
+
+  .status-badge { padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge-unmarked { background: var(--gray-100); color: var(--gray-600); }
+  .badge-present { background: #d1fae5; color: #047857; }
+  .badge-absent { background: #fee2e2; color: #b91c1c; }
+
+  .quick-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .btn-check { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .btn-cross { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+
+  /* 底部固定欄 */
+  .bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--gray-200);
+    padding: 8px 14px calc(8px + var(--safe-bottom));
+  }
+
+  .action-btn {
+    width: 100%;
+    padding: 11px;
+    border-radius: var(--radius-md);
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    background: var(--primary);
+    color: #fff;
+  }
+
+  .empty-state { text-align: center; padding: 30px; color: var(--gray-400); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <h1 class="app-title">點名</h1>
+    <div class="sync-badge online" id="syncStatus">
+      <span class="dot"></span><span id="syncText">已同步</span>
+    </div>
+  </div>
+
+  <div class="class-tabs" id="classTabs"></div>
+
+  <div class="stats-card">
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressBar" style="width: 0%;"></div>
+    </div>
+    <div class="stats-counts" id="statsCounts">
+      <span>出席: <b class="text-success">0</b></span>
+      <span>缺席: <b class="text-danger">0</b></span>
+      <span>未點: <b class="text-gray">0</b></span>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <input type="text" class="search-input" id="searchInput" placeholder="搜尋姓名..." autocomplete="off">
+    <select class="filter-select" id="filterSelect">
+      <option value="all">全部</option>
+      <option value="unmarked">未點名</option>
+      <option value="present">出席</option>
+      <option value="absent">缺席</option>
+    </select>
+  </div>
+</header>
+
+<div class="list-container" id="listContainer"></div>
+
+<div class="bottom-bar">
+  <button class="action-btn" id="btnExport">匯出 CSV</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ========= 1. 學生名單 ========= */
+const STUDENTS = [
+  // A 班
+  { class: "A", zh: "陳大文", en: "Chan Tai Man" },
+  { class: "A", zh: "李小明", en: "Lee Siu Ming" },
+  { class: "A", zh: "黃家豪", en: "Wong Ka Ho" },
+  // B 班
+  { class: "B", zh: "王小花", en: "Wong Siu Fa" },
+  { class: "B", zh: "張志強", en: "Cheung Chi Keung" },
+  // C 班
+  { class: "C", zh: "趙子龍", en: "Chiu Tsz Lung" },
+  { class: "C", zh: "許巧兒", en: "Hui Hau Yi" }
+];
+
+/* ========= 2. 貼入你的 Firebase Config 做同步 ========= */
+const firebaseConfig = {
+  apiKey: "AIzaSyAdNHWlti6Faxqa_JVOEks7R2PLVJlxtEs",
+  authDomain: "attendance-2627.firebaseapp.com",
+  projectId: "attendance-2627",
+  storageBucket: "attendance-2627.firebasestorage.app",
+  messagingSenderId: "287751174166",
+  appId: "1:287751174166:web:9500c8566e00f758285d37"
+};
+
+const CLASSES = [...new Set(STUDENTS.map(s => s.class))];
+const DOC_REF_PATH = ["attendance", "activity1"];
+
+let app, db, docRef;
+let currentClass = CLASSES[0];
+let state = {};
+let searchQuery = "";
+let filterStatus = "all";
+
+const classTabsEl = document.getElementById("classTabs");
+const listContainerEl = document.getElementById("listContainer");
+const progressBarEl = document.getElementById("progressBar");
+const statsCountsEl = document.getElementById("statsCounts");
+const syncStatusEl = document.getElementById("syncStatus");
+const syncTextEl = document.getElementById("syncText");
+const searchInputEl = document.getElementById("searchInput");
+const filterSelectEl = document.getElementById("filterSelect");
+
+try {
+  app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  docRef = doc(db, ...DOC_REF_PATH);
+  initRealtimeSync();
+} catch (e) {
+  updateSyncState(false, "單機模式");
+}
+
+function triggerHaptic() {
+  if ("vibrate" in navigator) navigator.vibrate(10);
+}
+
+function renderTabs() {
+  classTabsEl.innerHTML = "";
+  CLASSES.forEach(c => {
+    const btn = document.createElement("button");
+    btn.className = `tab-btn ${c === currentClass ? "active" : ""}`;
+    btn.textContent = `${c} 班`;
+    btn.onclick = () => {
+      currentClass = c;
+      renderTabs();
+      renderList();
+      updateStats();
+    };
+    classTabsEl.appendChild(btn);
+  });
+}
+
+const getKey = (s, globalIndex) => `${s.class}|${globalIndex}`;
+
+function renderList() {
+  listContainerEl.innerHTML = "";
+
+  const filtered = STUDENTS.map((s, gi) => ({ student: s, globalIndex: gi }))
+    .filter(({ student, globalIndex }) => {
+      if (student.class !== currentClass) return false;
+      const key = getKey(student, globalIndex);
+      const st = state[key] || "unmarked";
+
+      if (filterStatus !== "all" && st !== filterStatus) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        if (!student.zh.includes(q) && !student.en.toLowerCase().includes(q)) return false;
+      }
+      return true;
+    });
+
+  if (filtered.length === 0) {
+    listContainerEl.innerHTML = `<div class="empty-state">無資料</div>`;
+    return;
+  }
+
+  filtered.forEach(({ student, globalIndex }) => {
+    const key = getKey(student, globalIndex);
+    const st = state[key];
+
+    const wrapper = document.createElement("div");
+    wrapper.className = `student-card-wrapper ${st === "present" ? "is-present" : st === "absent" ? "is-absent" : ""}`;
+
+    const bgPresent = document.createElement("div");
+    bgPresent.className = "swipe-bg present";
+    bgPresent.innerHTML = "出席";
+
+    const bgAbsent = document.createElement("div");
+    bgAbsent.className = "swipe-bg absent";
+    bgAbsent.innerHTML = "缺席";
+
+    const card = document.createElement("div");
+    card.className = "student-card";
+
+    let badgeHtml = `<span class="status-badge badge-unmarked">未點</span>`;
+    if (st === "present") badgeHtml = `<span class="status-badge badge-present">出席</span>`;
+    if (st === "absent") badgeHtml = `<span class="status-badge badge-absent">缺席</span>`;
+
+    card.innerHTML = `
+      <div class="student-info">
+        <div class="student-zh">${student.zh}</div>
+        <div class="student-en">${student.en}</div>
+      </div>
+      <div class="action-area">
+        ${badgeHtml}
+        <button class="quick-btn btn-check">✓</button>
+        <button class="quick-btn btn-cross">✕</button>
+      </div>
+    `;
+
+    card.querySelector(".btn-check").onclick = (e) => { e.stopPropagation(); triggerHaptic(); toggleStatus(key, "present"); };
+    card.querySelector(".btn-cross").onclick = (e) => { e.stopPropagation(); triggerHaptic(); toggleStatus(key, "absent"); };
+
+    wrapper.appendChild(bgPresent);
+    wrapper.appendChild(bgAbsent);
+    wrapper.appendChild(card);
+    listContainerEl.appendChild(wrapper);
+
+    attachSwipeGesture(wrapper, card, bgPresent, bgAbsent, key);
+  });
+}
+
+function attachSwipeGesture(wrapper, card, bgPresent, bgAbsent, key) {
+  let startX = 0, startY = 0, currentX = 0, isDragging = false, isHorizontal = null;
+  const threshold = 60;
+
+  wrapper.addEventListener("touchstart", e => {
+    const touch = e.touches[0];
+    startX = touch.clientX;
+    startY = touch.clientY;
+    currentX = 0;
+    isDragging = true;
+    isHorizontal = null;
+    wrapper.classList.add("dragging");
+  }, { passive: true });
+
+  wrapper.addEventListener("touchmove", e => {
+    if (!isDragging) return;
+    const touch = e.touches[0];
+    const diffX = touch.clientX - startX;
+    const diffY = touch.clientY - startY;
+
+    if (isHorizontal === null) {
+      if (Math.abs(diffX) > 6 || Math.abs(diffY) > 6) {
+        isHorizontal = Math.abs(diffX) > Math.abs(diffY);
+      }
+    }
+    if (!isHorizontal) return;
+
+    currentX = Math.max(-120, Math.min(120, diffX));
+    card.style.transform = `translateX(${currentX}px)`;
+
+    if (currentX > 0) {
+      bgPresent.style.opacity = Math.min(1, currentX / threshold);
+      bgAbsent.style.opacity = "0";
+    } else {
+      bgAbsent.style.opacity = Math.min(1, Math.abs(currentX) / threshold);
+      bgPresent.style.opacity = "0";
+    }
+  }, { passive: true });
+
+  const handleEnd = () => {
+    if (!isDragging) return;
+    isDragging = false;
+    wrapper.classList.remove("dragging");
+    card.style.transform = "";
+    bgPresent.style.opacity = "0";
+    bgAbsent.style.opacity = "0";
+
+    if (isHorizontal && Math.abs(currentX) >= threshold) {
+      triggerHaptic();
+      toggleStatus(key, currentX > 0 ? "present" : "absent");
+    }
+  };
+
+  wrapper.addEventListener("touchend", handleEnd);
+  wrapper.addEventListener("touchcancel", handleEnd);
+}
+
+function toggleStatus(key, targetStatus) {
+  state[key] = state[key] === targetStatus ? null : targetStatus;
+  if (state[key] === null) delete state[key];
+  saveState();
+  renderList();
+  updateStats();
+}
+
+async function saveState() {
+  if (!docRef) return;
+  try {
+    await setDoc(docRef, state);
+  } catch (err) {
+    updateSyncState(false, "失敗");
+  }
+}
+
+function initRealtimeSync() {
+  onSnapshot(docRef, snap => {
+    state = snap.exists() ? snap.data() : {};
+    renderList();
+    updateStats();
+    updateSyncState(true, "已同步");
+  }, () => {
+    updateSyncState(false, "中斷");
+  });
+}
+
+function updateSyncState(isOnline, text) {
+  syncStatusEl.className = `sync-badge ${isOnline ? "online" : "offline"}`;
+  syncTextEl.textContent = text;
+}
+
+function updateStats() {
+  const list = STUDENTS.map((s, gi) => ({ student: s, key: getKey(s, gi) })).filter(x => x.student.class === currentClass);
+  const total = list.length;
+  let present = 0, absent = 0;
+
+  list.forEach(x => {
+    if (state[x.key] === "present") present++;
+    if (state[x.key] === "absent") absent++;
+  });
+
+  const percent = total > 0 ? Math.round(((present + absent) / total) * 100) : 0;
+  progressBarEl.style.width = `${percent}%`;
+
+  statsCountsEl.innerHTML = `
+    <span>出席: <b class="text-success">${present}</b></span>
+    <span>缺席: <b class="text-danger">${absent}</b></span>
+    <span>未點: <b class="text-gray">${total - present - absent}</b></span>
+  `;
+}
+
+searchInputEl.oninput = (e) => { searchQuery = e.target.value.trim(); renderList(); };
+filterSelectEl.onchange = (e) => { filterStatus = e.target.value; renderList(); };
+
+document.getElementById("btnExport").onclick = () => {
+  const rows = [["Class", "Chinese Name", "English Name", "Status"]];
+  STUDENTS.forEach((s, gi) => {
+    const st = state[getKey(s, gi)];
+    rows.push([s.class, s.zh, s.en, st === "present" ? "Present" : st === "absent" ? "Absent" : "Not marked"]);
+  });
+
+  const csvContent = "\uFEFF" + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `attendance_${new Date().toISOString().split("T")[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+renderTabs();
+renderList();
+updateStats();
+</script>
+</body>
+</html>
