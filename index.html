@@ -291,7 +291,7 @@
   <div class="header-top">
     <h1 class="app-title">點名</h1>
     <div class="sync-badge online" id="syncStatus">
-      <span class="dot"></span><span id="syncText">已同步</span>
+      <span class="dot"></span><span id="syncText">初始化中...</span>
     </div>
   </div>
 
@@ -326,7 +326,7 @@
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ========= 1. 學生名單 ========= */
@@ -343,7 +343,7 @@ const STUDENTS = [
   { class: "C", zh: "許巧兒", en: "Hui Hau Yi" }
 ];
 
-/* ========= 2. 貼入你的 Firebase Config 做同步 ========= */
+/* ========= 2. Firebase Config ========= */
 const firebaseConfig = {
   apiKey: "AIzaSyAdNHWlti6Faxqa_JVOEks7R2PLVJlxtEs",
   authDomain: "attendance-2627.firebaseapp.com",
@@ -377,7 +377,8 @@ try {
   docRef = doc(db, ...DOC_REF_PATH);
   initRealtimeSync();
 } catch (e) {
-  updateSyncState(false, "單機模式");
+  console.error("Firebase 初始化失敗:", e);
+  updateSyncState(false, "初始化失敗");
 }
 
 function triggerHaptic() {
@@ -539,8 +540,10 @@ async function saveState() {
   if (!docRef) return;
   try {
     await setDoc(docRef, state);
+    console.log("Firebase 儲存成功");
   } catch (err) {
-    updateSyncState(false, "失敗");
+    console.error("Firebase 儲存失敗詳情:", err);
+    updateSyncState(false, "儲存失敗");
   }
 }
 
@@ -550,8 +553,9 @@ function initRealtimeSync() {
     renderList();
     updateStats();
     updateSyncState(true, "已同步");
-  }, () => {
-    updateSyncState(false, "中斷");
+  }, err => {
+    console.error("Firebase 同步錯誤詳情:", err);
+    updateSyncState(false, "同步中斷");
   });
 }
 
