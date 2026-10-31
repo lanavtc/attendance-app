@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>點名</title>
+<title>點名系統</title>
 <style>
   :root {
     --primary: #2563eb;
@@ -20,215 +20,110 @@
     --radius-lg: 14px;
     --radius-md: 10px;
     --radius-sm: 8px;
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
 
-  * {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f5f7;
-    color: var(--gray-900);
+    margin: 0; padding: 0; background-color: #f4f5f7; color: var(--gray-900);
     overscroll-behavior-y: none;
     padding-bottom: calc(68px + var(--safe-bottom));
   }
 
-  /* 頂部 Sticky Header */
   header {
-    position: sticky;
-    top: 0;
-    z-index: 50;
+    position: sticky; top: 0; z-index: 50;
     background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--gray-200);
     padding-top: max(10px, var(--safe-top));
-    padding-left: 14px;
-    padding-right: 14px;
-    padding-bottom: 10px;
+    padding-left: 14px; padding-right: 14px; padding-bottom: 10px;
   }
 
-  .header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-  }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .app-title { font-size: 18px; font-weight: 700; margin: 0; }
 
-  .app-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin: 0;
-  }
-
-  .sync-badge {
-    font-size: 11px;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
+  .sync-badge { font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
   .sync-badge.online { background: var(--success-bg); color: var(--success); }
   .sync-badge.offline { background: var(--danger-bg); color: var(--danger); }
   .sync-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
+  /* 模式切換鈕 */
+  .mode-switch {
+    display: flex; background: var(--gray-200); border-radius: var(--radius-md);
+    padding: 3px; margin-bottom: 8px; gap: 2px;
+  }
+  .mode-btn {
+    flex: 1; padding: 8px 0; border: none; border-radius: 8px;
+    font-size: 13px; font-weight: 700; color: var(--gray-600); background: transparent;
+    cursor: pointer; transition: all 0.2s ease; text-align: center;
+  }
+  .mode-btn.active-in { background: #10b981; color: #fff; }
+  .mode-btn.active-out { background: #6366f1; color: #fff; }
+
   /* 班別 Tabs */
-  .class-tabs {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 8px;
-  }
-
+  .class-tabs { display: flex; gap: 6px; margin-bottom: 8px; }
   .tab-btn {
-    flex: 1;
-    padding: 8px 0;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--gray-200);
-    background: #fff;
-    color: var(--gray-600);
-    font-size: 14px;
-    font-weight: 600;
-    text-align: center;
+    flex: 1; padding: 7px 0; border-radius: var(--radius-md);
+    border: 1px solid var(--gray-200); background: #fff;
+    color: var(--gray-600); font-size: 13px; font-weight: 600; text-align: center;
   }
+  .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-  .tab-btn.active {
-    background: var(--primary);
-    color: #fff;
-    border-color: var(--primary);
-  }
-
-  /* 進度條與數據統計 */
+  /* 統計與進度 */
   .stats-card {
-    background: #fff;
-    border-radius: var(--radius-md);
-    padding: 10px;
-    margin-bottom: 8px;
-    border: 1px solid var(--gray-200);
+    background: #fff; border-radius: var(--radius-md);
+    padding: 10px; margin-bottom: 8px; border: 1px solid var(--gray-200);
   }
-
-  .progress-bar-bg {
-    height: 6px;
-    background: var(--gray-200);
-    border-radius: 3px;
-    overflow: hidden;
-    margin-bottom: 8px;
-  }
-
-  .progress-bar-fill {
-    height: 100%;
-    background: var(--primary);
-    transition: width 0.3s ease;
-  }
-
-  .stats-counts {
-    display: flex;
-    justify-content: space-around;
-    font-size: 12px;
-    color: var(--gray-600);
-  }
-
+  .progress-bar-bg { height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+  .progress-bar-fill { height: 100%; background: var(--primary); transition: width 0.3s ease; }
+  .stats-counts { display: flex; justify-content: space-around; font-size: 12px; color: var(--gray-600); }
   .stats-counts b { font-weight: 700; }
   .text-success { color: var(--success); }
   .text-danger { color: var(--danger); }
   .text-gray { color: var(--gray-800); }
 
-  /* 搜尋與篩選列 */
-  .filter-bar {
-    display: flex;
-    gap: 6px;
-  }
-
+  /* 搜尋與過濾 */
+  .filter-bar { display: flex; gap: 6px; }
   .search-input {
-    flex: 1;
-    padding: 7px 10px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--gray-200);
-    background: var(--gray-100);
-    font-size: 13px;
-    outline: none;
+    flex: 1; padding: 7px 10px; border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-200); background: var(--gray-100);
+    font-size: 13px; outline: none;
   }
-
-  .search-input:focus {
-    background: #fff;
-    border-color: var(--primary);
-  }
-
+  .search-input:focus { background: #fff; border-color: var(--primary); }
   .filter-select {
-    padding: 7px 8px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--gray-200);
-    background: var(--gray-100);
-    font-size: 13px;
-    color: var(--gray-800);
-    outline: none;
+    padding: 7px 8px; border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-200); background: var(--gray-100);
+    font-size: 13px; color: var(--gray-800); outline: none;
   }
 
-  /* 卡片列表 Container */
-  .list-container {
-    padding: 10px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+  /* 列表卡片 */
+  .list-container { padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .student-card-wrapper { position: relative; border-radius: var(--radius-lg); overflow: hidden; touch-action: pan-y; background: #fff; }
 
-  /* 學生卡片主體 */
-  .student-card-wrapper {
-    position: relative;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    touch-action: pan-y;
-    background: #fff;
-  }
-
-  /* Swipe 背景 */
   .swipe-bg {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
-    font-weight: 700;
-    font-size: 14px;
-    color: #fff;
-    border-radius: var(--radius-lg);
-    opacity: 0;
+    position: absolute; inset: 0; display: flex; align-items: center;
+    padding: 0 16px; font-weight: 700; font-size: 14px; color: #fff;
+    border-radius: var(--radius-lg); opacity: 0;
   }
-
   .swipe-bg.present { background: var(--success); justify-content: flex-start; }
   .swipe-bg.absent { background: var(--danger); justify-content: flex-end; }
 
   .student-card {
-    position: relative;
-    z-index: 2;
-    background: #fff;
-    padding: 12px 14px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    position: relative; z-index: 2; background: #fff; padding: 12px 14px;
+    display: flex; justify-content: space-between; align-items: center;
     transition: transform 0.2s ease, background 0.2s ease;
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius-lg);
+    border: 1px solid var(--gray-200); border-radius: var(--radius-lg);
   }
-
   .student-card-wrapper.dragging .student-card { transition: none; }
-  .student-card-wrapper.is-present .student-card {
-    background: var(--success-bg);
-    border-color: rgba(16, 185, 129, 0.3);
-  }
-  .student-card-wrapper.is-absent .student-card {
-    background: var(--danger-bg);
-    border-color: rgba(239, 68, 68, 0.3);
+  .student-card-wrapper.is-present .student-card { background: var(--success-bg); border-color: rgba(16, 185, 129, 0.3); }
+  .student-card-wrapper.is-absent .student-card { background: var(--danger-bg); border-color: rgba(239, 68, 68, 0.3); }
+
+  /* 未到場學生的鎖定樣式 */
+  .student-card-wrapper.locked .student-card {
+    background: #f9fafb; opacity: 0.6; border-style: dashed;
   }
 
   .student-info { display: flex; flex-direction: column; gap: 2px; }
@@ -236,52 +131,29 @@
   .student-en { font-size: 12px; color: var(--gray-600); }
 
   .action-area { display: flex; align-items: center; gap: 6px; }
-
   .status-badge { padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }
   .badge-unmarked { background: var(--gray-100); color: var(--gray-600); }
   .badge-present { background: #d1fae5; color: #047857; }
   .badge-absent { background: #fee2e2; color: #b91c1c; }
+  .badge-locked { background: var(--gray-200); color: var(--gray-400); }
 
   .quick-btn {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    cursor: pointer;
+    width: 34px; height: 34px; border-radius: 50%; border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; cursor: pointer;
   }
   .btn-check { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
   .btn-cross { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
 
-  /* 底部固定欄 */
   .bottom-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 40;
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-top: 1px solid var(--gray-200);
-    padding: 8px 14px calc(8px + var(--safe-bottom));
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+    background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--gray-200); padding: 8px 14px calc(8px + var(--safe-bottom));
   }
-
   .action-btn {
-    width: 100%;
-    padding: 11px;
-    border-radius: var(--radius-md);
-    border: none;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    background: var(--primary);
-    color: #fff;
+    width: 100%; padding: 11px; border-radius: var(--radius-md); border: none;
+    font-size: 14px; font-weight: 700; cursor: pointer; background: var(--primary); color: #fff;
   }
-
   .empty-state { text-align: center; padding: 30px; color: var(--gray-400); font-size: 13px; }
 </style>
 </head>
@@ -289,10 +161,15 @@
 
 <header>
   <div class="header-top">
-    <h1 class="app-title">點名</h1>
+    <h1 class="app-title">點名系統</h1>
     <div class="sync-badge online" id="syncStatus">
-      <span class="dot"></span><span id="syncText">初始化中...</span>
+      <span class="dot"></span><span id="syncText">已同步</span>
     </div>
+  </div>
+
+  <div class="mode-switch">
+    <button class="mode-btn active-in" id="modeInBtn">☀️ 到場點名 (Arrive)</button>
+    <button class="mode-btn" id="modeOutBtn">🌙 離場點名 (Leave)</button>
   </div>
 
   <div class="class-tabs" id="classTabs"></div>
@@ -313,8 +190,8 @@
     <select class="filter-select" id="filterSelect">
       <option value="all">全部</option>
       <option value="unmarked">未點名</option>
-      <option value="present">出席</option>
-      <option value="absent">缺席</option>
+      <option value="present" id="optPresent">出席</option>
+      <option value="absent" id="optAbsent">缺席</option>
     </select>
   </div>
 </header>
@@ -322,7 +199,7 @@
 <div class="list-container" id="listContainer"></div>
 
 <div class="bottom-bar">
-  <button class="action-btn" id="btnExport">匯出 CSV</button>
+  <button class="action-btn" id="btnExport">匯出完整 CSV (含到場與離場)</button>
 </div>
 
 <script type="module">
@@ -404,6 +281,7 @@ const STUDENTS = [
 { class: "C", zh: "周梓怡", en: "ZHOU Ziyi" }
 ];
 
+
 /* ========= 2. Firebase Config ========= */
 const firebaseConfig = {
   apiKey: "AIzaSyAdNHWlti6Faxqa_JVOEks7R2PLVJlxtEs",
@@ -418,6 +296,7 @@ const CLASSES = [...new Set(STUDENTS.map(s => s.class))];
 const DOC_REF_PATH = ["attendance", "activity1"];
 
 let app, db, docRef;
+let currentMode = "in"; // "in" = 到場, "out" = 離場
 let currentClass = CLASSES[0];
 let state = {};
 let searchQuery = "";
@@ -431,6 +310,10 @@ const syncStatusEl = document.getElementById("syncStatus");
 const syncTextEl = document.getElementById("syncText");
 const searchInputEl = document.getElementById("searchInput");
 const filterSelectEl = document.getElementById("filterSelect");
+const modeInBtn = document.getElementById("modeInBtn");
+const modeOutBtn = document.getElementById("modeOutBtn");
+const optPresentEl = document.getElementById("optPresent");
+const optAbsentEl = document.getElementById("optAbsent");
 
 try {
   app = initializeApp(firebaseConfig);
@@ -438,9 +321,27 @@ try {
   docRef = doc(db, ...DOC_REF_PATH);
   initRealtimeSync();
 } catch (e) {
-  console.error("Firebase 初始化失敗:", e);
   updateSyncState(false, "初始化失敗");
 }
+
+modeInBtn.onclick = () => {
+  currentMode = "in";
+  modeInBtn.className = "mode-btn active-in";
+  modeOutBtn.className = "mode-btn";
+  optPresentEl.textContent = "出席";
+  optAbsentEl.textContent = "缺席";
+  renderList();
+  updateStats();
+};
+modeOutBtn.onclick = () => {
+  currentMode = "out";
+  modeInBtn.className = "mode-btn";
+  modeOutBtn.className = "mode-btn active-out";
+  optPresentEl.textContent = "準備離開";
+  optAbsentEl.textContent = "唔見咗";
+  renderList();
+  updateStats();
+};
 
 function triggerHaptic() {
   if ("vibrate" in navigator) navigator.vibrate(10);
@@ -462,7 +363,7 @@ function renderTabs() {
   });
 }
 
-const getKey = (s, globalIndex) => `${s.class}|${globalIndex}`;
+const getKey = (mode, s, globalIndex) => `${mode}|${s.class}|${globalIndex}`;
 
 function renderList() {
   listContainerEl.innerHTML = "";
@@ -470,7 +371,7 @@ function renderList() {
   const filtered = STUDENTS.map((s, gi) => ({ student: s, globalIndex: gi }))
     .filter(({ student, globalIndex }) => {
       if (student.class !== currentClass) return false;
-      const key = getKey(student, globalIndex);
+      const key = getKey(currentMode, student, globalIndex);
       const st = state[key] || "unmarked";
 
       if (filterStatus !== "all" && st !== filterStatus) return false;
@@ -487,26 +388,37 @@ function renderList() {
   }
 
   filtered.forEach(({ student, globalIndex }) => {
-    const key = getKey(student, globalIndex);
+    const inKey = getKey("in", student, globalIndex);
+    const isArrived = state[inKey] === "present"; // 檢查該學生到場點名是否為出席
+
+    const key = getKey(currentMode, student, globalIndex);
     const st = state[key];
 
     const wrapper = document.createElement("div");
-    wrapper.className = `student-card-wrapper ${st === "present" ? "is-present" : st === "absent" ? "is-absent" : ""}`;
+
+    // 如果是「離場模式」且學生未到場，加上 locked 樣式
+    const isLocked = (currentMode === "out" && !isArrived);
+
+    wrapper.className = `student-card-wrapper ${isLocked ? "locked" : st === "present" ? "is-present" : st === "absent" ? "is-absent" : ""}`;
 
     const bgPresent = document.createElement("div");
     bgPresent.className = "swipe-bg present";
-    bgPresent.innerHTML = "出席";
+    bgPresent.innerHTML = currentMode === "in" ? "到場" : "準備離開";
 
     const bgAbsent = document.createElement("div");
     bgAbsent.className = "swipe-bg absent";
-    bgAbsent.innerHTML = "缺席";
+    bgAbsent.innerHTML = currentMode === "in" ? "缺席" : "唔見咗";
 
     const card = document.createElement("div");
     card.className = "student-card";
 
     let badgeHtml = `<span class="status-badge badge-unmarked">未點</span>`;
-    if (st === "present") badgeHtml = `<span class="status-badge badge-present">出席</span>`;
-    if (st === "absent") badgeHtml = `<span class="status-badge badge-absent">缺席</span>`;
+    if (currentMode === "out" && !isArrived) {
+      badgeHtml = `<span class="status-badge badge-locked">未到場(不可點)</span>`;
+    } else {
+      if (st === "present") badgeHtml = `<span class="status-badge badge-present">${currentMode === "in" ? "到場" : "準備離開"}</span>`;
+      if (st === "absent") badgeHtml = `<span class="status-badge badge-absent">${currentMode === "in" ? "缺席" : "唔見咗"}</span>`;
+    }
 
     card.innerHTML = `
       <div class="student-info">
@@ -515,20 +427,20 @@ function renderList() {
       </div>
       <div class="action-area">
         ${badgeHtml}
-        <button class="quick-btn btn-check">✓</button>
-        <button class="quick-btn btn-cross">✕</button>
+        ${!isLocked ? '<button class="quick-btn btn-check">✓</button><button class="quick-btn btn-cross">✕</button>' : ''}
       </div>
     `;
 
-    card.querySelector(".btn-check").onclick = (e) => { e.stopPropagation(); triggerHaptic(); toggleStatus(key, "present"); };
-    card.querySelector(".btn-cross").onclick = (e) => { e.stopPropagation(); triggerHaptic(); toggleStatus(key, "absent"); };
+    if (!isLocked) {
+      card.querySelector(".btn-check").onclick = (e) => { e.stopPropagation(); triggerHaptic(); toggleStatus(key, "present"); };
+      card.querySelector(".btn-cross").onclick = (e) => { e.stopPropagation(); triggerHaptic(); toggleStatus(key, "absent"); };
+      attachSwipeGesture(wrapper, card, bgPresent, bgAbsent, key);
+    }
 
     wrapper.appendChild(bgPresent);
     wrapper.appendChild(bgAbsent);
     wrapper.appendChild(card);
     listContainerEl.appendChild(wrapper);
-
-    attachSwipeGesture(wrapper, card, bgPresent, bgAbsent, key);
   });
 }
 
@@ -538,11 +450,8 @@ function attachSwipeGesture(wrapper, card, bgPresent, bgAbsent, key) {
 
   wrapper.addEventListener("touchstart", e => {
     const touch = e.touches[0];
-    startX = touch.clientX;
-    startY = touch.clientY;
-    currentX = 0;
-    isDragging = true;
-    isHorizontal = null;
+    startX = touch.clientX; startY = touch.clientY;
+    currentX = 0; isDragging = true; isHorizontal = null;
     wrapper.classList.add("dragging");
   }, { passive: true });
 
@@ -601,9 +510,7 @@ async function saveState() {
   if (!docRef) return;
   try {
     await setDoc(docRef, state);
-    console.log("Firebase 儲存成功");
   } catch (err) {
-    console.error("Firebase 儲存失敗詳情:", err);
     updateSyncState(false, "儲存失敗");
   }
 }
@@ -614,8 +521,7 @@ function initRealtimeSync() {
     renderList();
     updateStats();
     updateSyncState(true, "已同步");
-  }, err => {
-    console.error("Firebase 同步錯誤詳情:", err);
+  }, () => {
     updateSyncState(false, "同步中斷");
   });
 }
@@ -626,7 +532,16 @@ function updateSyncState(isOnline, text) {
 }
 
 function updateStats() {
-  const list = STUDENTS.map((s, gi) => ({ student: s, key: getKey(s, gi) })).filter(x => x.student.class === currentClass);
+  const list = STUDENTS.map((s, gi) => ({ student: s, key: getKey(currentMode, s, gi), globalIndex: gi }))
+    .filter(x => {
+      if (x.student.class !== currentClass) return false;
+      if (currentMode === "out") {
+        const inKey = getKey("in", x.student, x.globalIndex);
+        return state[inKey] === "present";
+      }
+      return true;
+    });
+
   const total = list.length;
   let present = 0, absent = 0;
 
@@ -639,8 +554,8 @@ function updateStats() {
   progressBarEl.style.width = `${percent}%`;
 
   statsCountsEl.innerHTML = `
-    <span>出席: <b class="text-success">${present}</b></span>
-    <span>缺席: <b class="text-danger">${absent}</b></span>
+    <span>${currentMode === 'in' ? '到場' : '準備離開'}: <b class="text-success">${present}</b></span>
+    <span>${currentMode === 'in' ? '缺席' : '唔見咗'}: <b class="text-danger">${absent}</b></span>
     <span>未點: <b class="text-gray">${total - present - absent}</b></span>
   `;
 }
@@ -649,10 +564,15 @@ searchInputEl.oninput = (e) => { searchQuery = e.target.value.trim(); renderList
 filterSelectEl.onchange = (e) => { filterStatus = e.target.value; renderList(); };
 
 document.getElementById("btnExport").onclick = () => {
-  const rows = [["Class", "Chinese Name", "English Name", "Status"]];
+  const rows = [["Class", "Chinese Name", "English Name", "Arrive Status", "Leave Status"]];
   STUDENTS.forEach((s, gi) => {
-    const st = state[getKey(s, gi)];
-    rows.push([s.class, s.zh, s.en, st === "present" ? "Present" : st === "absent" ? "Absent" : "Not marked"]);
+    const inSt = state[getKey("in", s, gi)];
+    const outSt = state[getKey("out", s, gi)];
+    rows.push([
+      s.class, s.zh, s.en,
+      inSt === "present" ? "Arrived" : inSt === "absent" ? "Absent" : "Not marked",
+      inSt !== "present" ? "Did not arrive" : (outSt === "present" ? "Ready to go" : outSt === "absent" ? "Missing" : "Not marked")
+    ]);
   });
 
   const csvContent = "\uFEFF" + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -660,7 +580,7 @@ document.getElementById("btnExport").onclick = () => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `attendance_${new Date().toISOString().split("T")[0]}.csv`;
+  a.download = `attendance_full_${new Date().toISOString().split("T")[0]}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 };
